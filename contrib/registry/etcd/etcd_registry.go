@@ -9,11 +9,13 @@ package etcd
 import (
 	"context"
 
+	etcd3 "go.etcd.io/etcd/client/v3"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/net/gsvc"
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
+// Register registers the service to etcd.
 func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	r.lease = etcd3.NewLease(r.client)
 	grant, err := r.lease.Grant(ctx, int64(r.keepaliveTTL.Seconds()))
@@ -45,6 +47,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	return nil
 }
 
+// Deregister deregisters the service from etcd.
 func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error {
 	_, err := r.client.Delete(ctx, service.Key())
 	if r.lease != nil {
@@ -64,7 +67,7 @@ func (r *Registry) doKeepAlive(leaseID etcd3.LeaseID, keepAliceCh <-chan *etcd3.
 
 		case res, ok := <-keepAliceCh:
 			if res != nil {
-				//r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
+				// r.logger.Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
 				r.logger.Noticef(ctx, `keepalive exit, lease id: %d`, leaseID)
