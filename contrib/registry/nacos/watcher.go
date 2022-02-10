@@ -48,7 +48,7 @@ func newWatcher(ctx context.Context, cli naming_client.INamingClient, serviceNam
 	return w, e
 }
 
-// Proceed returns the next result.
+// Proceed is used to watch the key.
 func (w *watcher) Proceed() (services []*gsvc.Service, err error) {
 	select {
 	case <-w.ctx.Done():
