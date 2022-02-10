@@ -15,6 +15,7 @@ type watcher struct {
 	set    *serviceSet
 }
 
+// Proceed is used to watch the key.
 func (w *watcher) Proceed() (services []*gsvc.Service, err error) {
 	select {
 	case <-w.ctx.Done():
@@ -28,6 +29,7 @@ func (w *watcher) Proceed() (services []*gsvc.Service, err error) {
 	return
 }
 
+// Close the watcher.
 func (w *watcher) Close() error {
 	w.cancel()
 	w.set.lock.Lock()

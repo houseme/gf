@@ -42,7 +42,7 @@ func WithTimeout(timeout time.Duration) Option {
 	return func(o *options) { o.timeout = timeout }
 }
 
-// Registry is consul registry
+// Registry is zookeeper registry
 type Registry struct {
 	opts     *options
 	conn     *zk.Conn
@@ -50,6 +50,7 @@ type Registry struct {
 	registry map[string]*serviceSet
 }
 
+// New returns a new Registry.
 func New(zkServers []string, opts ...Option) (*Registry, error) {
 	options := &options{
 		ctx:      context.Background(),
@@ -70,6 +71,7 @@ func New(zkServers []string, opts ...Option) (*Registry, error) {
 	}, err
 }
 
+// Register registers the service to zookeeper.
 func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	var (
 		data []byte
@@ -91,7 +93,7 @@ func (r *Registry) Register(ctx context.Context, service *gsvc.Service) error {
 	return nil
 }
 
-// Deregister registry service to zookeeper.
+// Deregister deregistry service to zookeeper.
 func (r *Registry) Deregister(ctx context.Context, service *gsvc.Service) error {
 	ch := make(chan error, 1)
 	go func() {
@@ -130,6 +132,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 	return items, nil
 }
 
+// Watch .watch service from zookeeper
 func (r *Registry) Watch(ctx context.Context, serviceName string) (gsvc.Watcher, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
