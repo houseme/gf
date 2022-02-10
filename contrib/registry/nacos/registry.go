@@ -79,7 +79,7 @@ func New(cli naming_client.INamingClient, opts ...Option) (r *Registry) {
 	}
 }
 
-// Register the registration.
+// Register the registration to nacos.
 func (r *Registry) Register(ctx context.Context, si *gsvc.Service) error {
 	if si.Name == "" {
 		return fmt.Errorf("kratos/nacos: serviceInstance.name can not be empty")
@@ -130,7 +130,7 @@ func (r *Registry) Register(ctx context.Context, si *gsvc.Service) error {
 	return nil
 }
 
-// Deregister the registration.
+// Deregister the registration from nacos server.
 func (r *Registry) Deregister(_ context.Context, service *gsvc.Service) error {
 	for _, endpoint := range service.Endpoints {
 		u, err := url.Parse(endpoint)
