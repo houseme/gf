@@ -9,10 +9,12 @@ package etcd
 import (
 	"context"
 
-	"github.com/gogf/gf/v2/net/gsvc"
 	etcd3 "go.etcd.io/etcd/client/v3"
+
+	"github.com/gogf/gf/v2/net/gsvc"
 )
 
+// Search is the etcd service discovery.
 func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Service, error) {
 	res, err := r.kv.Get(ctx, in.Key(), etcd3.WithPrefix())
 	if err != nil {
@@ -43,6 +45,7 @@ func (r *Registry) Search(ctx context.Context, in gsvc.SearchInput) ([]*gsvc.Ser
 	return filteredServices, nil
 }
 
+// Watch SearchByName is the etcd service discovery.
 func (r *Registry) Watch(ctx context.Context, key string) (gsvc.Watcher, error) {
 	return newWatcher(key, r.client)
 }
