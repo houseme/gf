@@ -423,7 +423,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
 	if option.InsertOption == InsertOptionSave {
-		onDuplicateStr = c.FormatOnDuplicate(keys, option)
+		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
 		listLength  = len(list)
@@ -471,7 +471,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 	return batchResult, nil
 }
 
-func (c *Core) FormatOnDuplicate(columns []string, option DoInsertOption) string {
+func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
 	var onDuplicateStr string
 	if option.OnDuplicateStr != "" {
 		onDuplicateStr = option.OnDuplicateStr
