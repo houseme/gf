@@ -13,9 +13,9 @@ import (
 )
 
 type DefaultHandlerResponse struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code    int         `json:"code"    dc:"Error code"`
+	Message string      `json:"message" dc:"Error message"`
+	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
 }
 
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
@@ -28,12 +28,11 @@ func MiddlewareHandlerResponse(r *Request) {
 	}
 
 	var (
-		err         error
-		res         interface{}
 		ctx         = r.Context()
+		err         = r.GetError()
+		res         = r.GetHandlerResponse()
 		internalErr error
 	)
-	res, err = r.GetHandlerResponse()
 	if err != nil {
 		code := gerror.Code(err)
 		if code == gcode.CodeNil {

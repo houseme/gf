@@ -139,7 +139,7 @@ func (s *Server) Start() error {
 	// OpenApi specification json producing handler.
 	if s.config.OpenApiPath != "" {
 		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`openapi specification is serving at address: %s%s`,
 			s.getListenAddress(),
@@ -147,12 +147,12 @@ func (s *Server) Start() error {
 		)
 	} else {
 		if s.config.SwaggerPath != "" {
-			s.Logger().Notice(
+			s.Logger().Warning(
 				ctx,
 				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
 			)
 		} else {
-			s.Logger().Debug(
+			s.Logger().Info(
 				ctx,
 				`openapi specification is disabled`,
 			)
@@ -201,7 +201,7 @@ func (s *Server) Start() error {
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
-		s.config.Handler = s
+		s.config.Handler = s.ServeHTTP
 	}
 
 	// Install external plugins.
@@ -600,4 +600,22 @@ func (s *Server) getListenerFdMap() map[string]string {
 		}
 	}
 	return m
+}
+
+// GetListenedPort retrieves and returns one port which is listened by current server.
+func (s *Server) GetListenedPort() int {
+	ports := s.GetListenedPorts()
+	if len(ports) > 0 {
+		return ports[0]
+	}
+	return 0
+}
+
+// GetListenedPorts retrieves and returns the ports which are listened by current server.
+func (s *Server) GetListenedPorts() []int {
+	ports := make([]int, 0)
+	for _, server := range s.servers {
+		ports = append(ports, server.GetListenedPort())
+	}
+	return ports
 }
