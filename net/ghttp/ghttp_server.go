@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -24,7 +25,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
@@ -128,7 +128,7 @@ func (s *Server) Start() error {
 		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
-		s.Logger().Debugf(
+		s.Logger().Infof(
 			ctx,
 			`swagger ui is serving at address: %s%s/`,
 			s.getListenAddress(),
