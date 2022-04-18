@@ -1,7 +1,6 @@
 name: GoFrame Main CI
 
 
-
 on:
   push:
     branches:
