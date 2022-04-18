@@ -10,10 +10,11 @@ import (
 	"context"
 	"strings"
 
+	"github.com/longbridgeapp/sqlparser"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/longbridgeapp/sqlparser"
 )
 
 // ShardingInput is input parameters for custom sharding handler.
@@ -92,7 +93,7 @@ func (c *Core) callShardingHandlerFromCtx(
 	if err != nil {
 		return nil, err
 	}
-	var shardingIn = ShardingInput{
+	shardingIn := ShardingInput{
 		Table:         parsedOut.Table,
 		Schema:        c.db.GetSchema(),
 		OperationData: parsedOut.OperationData,
