@@ -189,14 +189,15 @@ type Core struct {
 
 // DoCommitInput is the input parameters for function DoCommit.
 type DoCommitInput struct {
-	Db            *sql.DB
-	Tx            *sql.Tx
-	Stmt          *sql.Stmt
-	Link          Link
-	Sql           string
-	Args          []interface{}
-	Type          string
-	IsTransaction bool
+	Db             *sql.DB
+	Tx             *sql.Tx
+	Stmt           *sql.Stmt
+	Link           Link
+	Sql            string
+	Args           []interface{}
+	Type           string
+	IsTransaction  bool
+	IsIgnoreResult bool
 }
 
 // DoCommitOutput is the output parameters for function DoCommit.
