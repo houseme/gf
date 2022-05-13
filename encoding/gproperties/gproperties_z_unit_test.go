@@ -4,6 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+// Package gproperties provides accessing and converting for properties content.
 package gproperties_test
 
 import (
