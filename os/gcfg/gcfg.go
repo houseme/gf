@@ -25,7 +25,9 @@ type Config struct {
 }
 
 const (
-	DefaultInstanceName   = "config" // DefaultName is the default instance name for instance usage.
+	// DefaultInstanceName is the default instance name for the configuration.
+	DefaultInstanceName = "config" // DefaultName is the default instance name for instance usage.
+	// DefaultConfigFileName is the default configuration file name.
 	DefaultConfigFileName = "config" // DefaultConfigFile is the default configuration file name.
 )
 
@@ -52,7 +54,7 @@ func NewWithAdapter(adapter Adapter) *Config {
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
-	var instanceName = DefaultInstanceName
+	instanceName := DefaultInstanceName
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}

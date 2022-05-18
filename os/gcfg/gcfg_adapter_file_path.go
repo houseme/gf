@@ -243,7 +243,7 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 	}
 	// If it cannot find the path of `file`, it formats and returns a detailed error.
 	if path == "" {
-		var buffer = bytes.NewBuffer(nil)
+		buffer := bytes.NewBuffer(nil)
 		if c.searchPaths.Len() > 0 {
 			if !gstr.InArray(supportedFileTypes, fileExtName) {
 				buffer.WriteString(fmt.Sprintf(

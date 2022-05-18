@@ -227,9 +227,7 @@ func (c *AdapterFile) autoCheckAndAddMainPkgPathToSearchPaths() {
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
 func (c *AdapterFile) getJson(fileName ...string) (configJson *gjson.Json, err error) {
-	var (
-		usedFileName = c.defaultName
-	)
+	usedFileName := c.defaultName
 	if len(fileName) > 0 && fileName[0] != "" {
 		usedFileName = fileName[0]
 	} else {
