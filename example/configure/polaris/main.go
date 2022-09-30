@@ -62,7 +62,7 @@ func changeListener(event model.ConfigFileChangeEvent) {
 }
 
 func demo() {
-	polarisConfig, _ := polaris.NewAdapterPolaris()
+	polarisConfig, _ := polaris.NewAdapterFile()
 	if polarisConfig != nil {
 
 	}

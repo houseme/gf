@@ -14,12 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gfsnotify"
-	"github.com/gogf/gf/v2/os/gres"
 )
 
 // AdapterPolaris is the configuration for the polaris plugin
@@ -32,8 +27,8 @@ type AdapterPolaris struct {
 	violenceCheck bool             // Whether it does violence check in value index searching. It affects the performance when set true(false in default).
 }
 
-// NewAdapterPolaris creates a new AdapterPolaris
-func NewAdapterPolaris(file ...string) (*AdapterPolaris, error) {
+// NewAdapterFile creates a new AdapterPolaris
+func NewAdapterFile(file ...string) (*AdapterPolaris, error) {
 	conf, err := polaris.NewConfigAPI()
 	if err != nil {
 		return nil, err
@@ -77,13 +72,13 @@ func (c *AdapterPolaris) Data(ctx context.Context) (data map[string]interface{},
 
 // Available checks and returns whether configuration of given `file` is available.
 func (c *AdapterPolaris) Available(ctx context.Context, fileName string) bool {
-	var usedFileName string = c.FileName
-	if path, _ := c.GetFilePath(usedFileName); path != "" {
-		return true
-	}
-	if c.GetContent(usedFileName) != "" {
-		return true
-	}
+	// var usedFileName string = c.FileName
+	// if path, _ := c.GetFilePath(usedFileName); path != "" {
+	// 	return true
+	// }
+	// if c.GetContent(usedFileName) != "" {
+	// 	return true
+	// }
 	return false
 }
 
@@ -140,7 +135,7 @@ func (c *AdapterPolaris) RemoveContent(file ...string) {
 		}
 	})
 
-	intlog.Printf(context.TODO(), `RemoveContent: %s`, name)
+	g.Log().Printf(context.TODO(), `RemoveContent: %s`, name)
 }
 
 // ClearContent removes all global configuration contents.
@@ -162,65 +157,65 @@ func (c *AdapterPolaris) ClearContent() {
 // getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It returns nil if any error occurs.
 func (c *AdapterPolaris) getJson(fileName ...string) (configJson *gjson.Json, err error) {
-	usedFileName := c.FileName
-	if len(fileName) > 0 && fileName[0] != "" {
-		usedFileName = fileName[0]
-	} else {
-		usedFileName = c.FileName
-	}
-	// It uses json map to cache specified configuration file content.
-	result := c.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
-		var (
-			content  string
-			filePath string
-		)
-		// The configured content can be any kind of data type different from its file type.
-		isFromConfigContent := true
-		if content = c.GetContent(usedFileName); content == "" {
-			isFromConfigContent = false
-			filePath, err = c.GetFilePath(usedFileName)
-			if err != nil {
-				return nil
-			}
-			if filePath == "" {
-				return nil
-			}
-			if file := gres.Get(filePath); file != nil {
-				content = string(file.Content())
-			} else {
-				content = gfile.GetContents(filePath)
-			}
-		}
-		// Note that the underlying configuration json object operations are concurrent safe.
-		dataType := gfile.ExtName(filePath)
-		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
-			configJson, err = gjson.LoadContentType(dataType, content, true)
-		} else {
-			configJson, err = gjson.LoadContent(content, true)
-		}
-		if err != nil {
-			if filePath != "" {
-				err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
-			} else {
-				err = gerror.Wrap(err, `load configuration failed`)
-			}
-			return nil
-		}
-		configJson.SetViolenceCheck(c.violenceCheck)
-		// Add monitor for this configuration file,
-		// any changes of this file will refresh its cache in Config object.
-		if filePath != "" && !gres.Contains(filePath) {
-			_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-				c.jsonMap.Remove(usedFileName)
-			})
-			if err != nil {
-				return nil
-			}
-		}
-		return configJson
-	})
-	if result != nil {
-		return result.(*gjson.Json), err
-	}
+	// usedFileName := c.FileName
+	// if len(fileName) > 0 && fileName[0] != "" {
+	// 	usedFileName = fileName[0]
+	// } else {
+	// 	usedFileName = c.FileName
+	// }
+	// // It uses json map to cache specified configuration file content.
+	// result := c.jsonMap.GetOrSetFuncLock(usedFileName, func() interface{} {
+	// 	var (
+	// 		content  string
+	// 		filePath string
+	// 	)
+	// 	// The configured content can be any kind of data type different from its file type.
+	// 	isFromConfigContent := true
+	// 	if content = c.GetContent(usedFileName); content == "" {
+	// 		isFromConfigContent = false
+	// 		filePath, err = c.GetFilePath(usedFileName)
+	// 		if err != nil {
+	// 			return nil
+	// 		}
+	// 		if filePath == "" {
+	// 			return nil
+	// 		}
+	// 		if file := gres.Get(filePath); file != nil {
+	// 			content = string(file.Content())
+	// 		} else {
+	// 			content = gfile.GetContents(filePath)
+	// 		}
+	// 	}
+	// 	// Note that the underlying configuration json object operations are concurrent safe.
+	// 	dataType := gfile.ExtName(filePath)
+	// 	if gjson.IsValidDataType(dataType) && !isFromConfigContent {
+	// 		configJson, err = gjson.LoadContentType(dataType, content, true)
+	// 	} else {
+	// 		configJson, err = gjson.LoadContent(content, true)
+	// 	}
+	// 	if err != nil {
+	// 		if filePath != "" {
+	// 			err = gerror.Wrapf(err, `load config file "%s" failed`, filePath)
+	// 		} else {
+	// 			err = gerror.Wrap(err, `load configuration failed`)
+	// 		}
+	// 		return nil
+	// 	}
+	// 	configJson.SetViolenceCheck(c.violenceCheck)
+	// 	// Add monitor for this configuration file,
+	// 	// any changes of this file will refresh its cache in Config object.
+	// 	if filePath != "" && !gres.Contains(filePath) {
+	// 		_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
+	// 			c.jsonMap.Remove(usedFileName)
+	// 		})
+	// 		if err != nil {
+	// 			return nil
+	// 		}
+	// 	}
+	// 	return configJson
+	// })
+	// if result != nil {
+	// 	return result.(*gjson.Json), err
+	// }
 	return
 }
