@@ -1,4 +1,4 @@
-module github.com/gogf/gf/contrib/registry/polaris/v2
+module github.com/gogf/gf/contrib/config/polaris/v2
 
 go 1.15
 
