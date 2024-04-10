@@ -10,8 +10,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
@@ -67,9 +68,10 @@ func generateStructFieldDefinition(
 	ctx context.Context, field *gdb.TableField, in generateStructDefinitionInput,
 ) (attrLines []string, appendImport string) {
 	var (
-		err      error
-		typeName string
-		jsonTag  = getJsonTagFromCase(field.Name, in.JsonCase)
+		err              error
+		localTypeName    gdb.LocalType
+		localTypeNameStr string
+		jsonTag          = gstr.CaseConvert(field.Name, gstr.CaseTypeMatch(in.JsonCase))
 	)
 
 	if in.TypeMapping != nil && len(in.TypeMapping) > 0 {
@@ -84,38 +86,39 @@ func generateStructFieldDefinition(
 		}
 		if tryTypeName != "" {
 			if typeMapping, ok := in.TypeMapping[strings.ToLower(tryTypeName)]; ok {
-				typeName = typeMapping.Type
+				localTypeNameStr = typeMapping.Type
 				appendImport = typeMapping.Import
 			}
 		}
 	}
 
-	if typeName == "" {
-		typeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
+	if localTypeNameStr == "" {
+		localTypeName, err = in.DB.CheckLocalTypeForField(ctx, field.Type, nil)
 		if err != nil {
 			panic(err)
 		}
-	}
-	switch typeName {
-	case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
-		if in.StdTime {
-			typeName = "time.Time"
-		} else {
-			typeName = "*gtime.Time"
-		}
+		localTypeNameStr = string(localTypeName)
+		switch localTypeName {
+		case gdb.LocalTypeDate, gdb.LocalTypeDatetime:
+			if in.StdTime {
+				localTypeNameStr = "time.Time"
+			} else {
+				localTypeNameStr = "*gtime.Time"
+			}
 
-	case gdb.LocalTypeInt64Bytes:
-		typeName = "int64"
+		case gdb.LocalTypeInt64Bytes:
+			localTypeNameStr = "int64"
 
-	case gdb.LocalTypeUint64Bytes:
-		typeName = "uint64"
+		case gdb.LocalTypeUint64Bytes:
+			localTypeNameStr = "uint64"
 
-	// Special type handle.
-	case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
-		if in.GJsonSupport {
-			typeName = "*gjson.Json"
-		} else {
-			typeName = "string"
+		// Special type handle.
+		case gdb.LocalTypeJson, gdb.LocalTypeJsonb:
+			if in.GJsonSupport {
+				localTypeNameStr = "*gjson.Json"
+			} else {
+				localTypeNameStr = "string"
+			}
 		}
 	}
 
@@ -123,13 +126,23 @@ func generateStructFieldDefinition(
 		tagKey         = "`"
 		descriptionTag = gstr.Replace(formatComment(field.Comment), `"`, `\"`)
 	)
-	attrLines = []string{
-		"    #" + gstr.CaseCamel(field.Name),
-		" #" + typeName,
+	removeFieldPrefixArray := gstr.SplitAndTrim(in.RemoveFieldPrefix, ",")
+	newFiledName := field.Name
+	for _, v := range removeFieldPrefixArray {
+		newFiledName = gstr.TrimLeftStr(newFiledName, v, 1)
 	}
-	attrLines = append(attrLines, " #"+fmt.Sprintf(tagKey+`json:"%s"`, jsonTag))
-	attrLines = append(attrLines, " #"+fmt.Sprintf(`description:"%s"`+tagKey, descriptionTag))
-	attrLines = append(attrLines, " #"+fmt.Sprintf(`// %s`, formatComment(field.Comment)))
+	attrLines = []string{
+		"    #" + gstr.CaseCamel(newFiledName),
+		" #" + localTypeNameStr,
+	}
+	attrLines = append(attrLines, fmt.Sprintf(` #%sjson:"%s"`, tagKey, jsonTag))
+	// orm tag
+	if !in.IsDo {
+		// entity
+		attrLines = append(attrLines, fmt.Sprintf(` #orm:"%s"`, field.Name))
+	}
+	attrLines = append(attrLines, fmt.Sprintf(` #description:"%s"%s`, descriptionTag, tagKey))
+	attrLines = append(attrLines, fmt.Sprintf(` #// %s`, formatComment(field.Comment)))
 
 	for k, v := range attrLines {
 		if in.NoJsonTag {
@@ -155,31 +168,4 @@ func formatComment(comment string) string {
 	comment = gstr.Replace(comment, `\n`, " ")
 	comment = gstr.Trim(comment)
 	return comment
-}
-
-// getJsonTagFromCase call gstr.Case* function to convert the s to specified case.
-func getJsonTagFromCase(str, caseStr string) string {
-	switch gstr.ToLower(caseStr) {
-	case gstr.ToLower("Camel"):
-		return gstr.CaseCamel(str)
-
-	case gstr.ToLower("CamelLower"):
-		return gstr.CaseCamelLower(str)
-
-	case gstr.ToLower("Kebab"):
-		return gstr.CaseKebab(str)
-
-	case gstr.ToLower("KebabScreaming"):
-		return gstr.CaseKebabScreaming(str)
-
-	case gstr.ToLower("Snake"):
-		return gstr.CaseSnake(str)
-
-	case gstr.ToLower("SnakeFirstUpper"):
-		return gstr.CaseSnakeFirstUpper(str)
-
-	case gstr.ToLower("SnakeScreaming"):
-		return gstr.CaseSnakeScreaming(str)
-	}
-	return str
 }

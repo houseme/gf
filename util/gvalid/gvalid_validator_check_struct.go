@@ -51,7 +51,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		checkRules     = make([]fieldRule, 0)
 		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
 		customMessage  = make(CustomMsg)         // Custom rule error message map.
-		checkValueData = v.assoc                 // Ready to be validated data, which can be type of .
+		checkValueData = v.assoc                 // Ready to be validated data.
 	)
 	if checkValueData == nil {
 		checkValueData = object
@@ -181,6 +181,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 					Rule:      rule,
 					IsMeta:    isMeta,
 					FieldKind: field.OriginalKind(),
+					FieldType: field.Type(),
 				})
 			}
 		} else {
@@ -238,6 +239,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			continue
 		}
 		if field.IsEmbedded() {
+			// The attributes of embedded struct are considered as direct attributes of its parent struct.
 			if err = v.doCheckStruct(ctx, field.Value); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.(*validationError).errors {
@@ -256,7 +258,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				value = getPossibleValueFromMap(
 					inputParamMap, field.Name(), fieldToAliasNameMap[field.Name()],
 				)
-				if value == nil {
+				if empty.IsNil(value) {
 					switch field.Kind() {
 					case reflect.Map, reflect.Ptr, reflect.Slice, reflect.Array:
 						// Nothing to do.
@@ -302,12 +304,13 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 		// It checks each rule and its value in loop.
 		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
-			Name:     checkRuleItem.Name,
-			Value:    value,
-			Rule:     checkRuleItem.Rule,
-			Messages: customMessage[checkRuleItem.Name],
-			DataRaw:  checkValueData,
-			DataMap:  inputParamMap,
+			Name:      checkRuleItem.Name,
+			Value:     value,
+			ValueType: checkRuleItem.FieldType,
+			Rule:      checkRuleItem.Rule,
+			Messages:  customMessage[checkRuleItem.Name],
+			DataRaw:   checkValueData,
+			DataMap:   inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ============================================================

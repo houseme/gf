@@ -30,7 +30,7 @@ type ConfigNode struct {
 	User                 string        `json:"user"`                 // Authentication username.
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
-	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Type                 string        `json:"type"`                 // Database type: mysql, mariadb, sqlite, mssql, pgsql, oracle, clickhouse, dm.
 	Link                 string        `json:"link"`                 // (Optional) Custom link information for all configuration in one single string.
 	Extra                string        `json:"extra"`                // (Optional) Extra configuration according the registered third-party database driver.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
@@ -49,9 +49,9 @@ type ConfigNode struct {
 	ExecTimeout          time.Duration `json:"execTimeout"`          // (Optional) Max exec time for dml.
 	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time for a transaction.
 	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time for prepare operation.
-	CreatedAt            string        `json:"createdAt"`            // (Optional) The filed name of table for automatic-filled created datetime.
-	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
-	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
+	CreatedAt            string        `json:"createdAt"`            // (Optional) The field name of table for automatic-filled created datetime.
+	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The field name of table for automatic-filled updated datetime.
+	DeletedAt            string        `json:"deletedAt"`            // (Optional) The field name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
 }
 

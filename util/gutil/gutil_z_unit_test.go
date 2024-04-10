@@ -40,7 +40,7 @@ func Test_TryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gutil.TryCatch(ctx, func(ctx context.Context) {
 			panic("gutil TryCatch test")
-		})
+		}, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -59,12 +59,6 @@ func Test_TryCatch(t *testing.T) {
 		}, func(ctx context.Context, err error) {
 			t.Assert(err, "gutil TryCatch test")
 		})
-	})
-}
-
-func Test_IsEmpty(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gutil.IsEmpty(1), false)
 	})
 }
 

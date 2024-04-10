@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"net/http"
-	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -101,9 +100,9 @@ func (m *middleware) Next() {
 				loop = false
 			}
 		}, func(ctx context.Context, exception error) {
-			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+			if gerror.HasStack(exception) {
 				// It's already an error that has stack info.
-				m.request.error = v
+				m.request.error = exception
 			} else {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace
@@ -128,45 +127,6 @@ func (m *middleware) Next() {
 
 func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 	niceCallFunc(func() {
-		if funcInfo.Func != nil {
-			funcInfo.Func(m.request)
-		} else {
-			var inputValues = []reflect.Value{
-				reflect.ValueOf(m.request.Context()),
-			}
-			if funcInfo.Type.NumIn() == 2 {
-				var inputObject reflect.Value
-				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
-					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
-					m.request.error = m.request.Parse(inputObject.Interface())
-				} else {
-					inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
-					m.request.error = m.request.Parse(inputObject.Addr().Interface())
-				}
-				if m.request.error != nil {
-					return
-				}
-				inputValues = append(inputValues, inputObject)
-			}
-
-			// Call handler with dynamic created parameter values.
-			results := funcInfo.Value.Call(inputValues)
-			switch len(results) {
-			case 1:
-				if !results[0].IsNil() {
-					if err, ok := results[0].Interface().(error); ok {
-						m.request.error = err
-					}
-				}
-
-			case 2:
-				m.request.handlerResponse = results[0].Interface()
-				if !results[1].IsNil() {
-					if err, ok := results[1].Interface().(error); ok {
-						m.request.error = err
-					}
-				}
-			}
-		}
+		funcInfo.Func(m.request)
 	})
 }

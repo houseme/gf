@@ -11,13 +11,17 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
 )
 
 // Structs converts any slice to given struct slice.
 // Also see Scan, Struct.
-func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return Scan(params, pointer, mapping...)
+func Structs(params interface{}, pointer interface{}, paramKeyToAttrMap ...map[string]string) (err error) {
+	return Scan(params, pointer, paramKeyToAttrMap...)
+}
+
+// SliceStruct is alias of Structs.
+func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+	return Structs(params, pointer, mapping...)
 }
 
 // StructsTag acts as Structs but also with support for priority tag feature, which retrieves the
@@ -34,19 +38,9 @@ func StructsTag(params interface{}, pointer interface{}, priorityTag string) (er
 // The parameter `pointer` should be type of pointer to slice of struct.
 // Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
-func doStructs(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
-	if params == nil {
-		// If `params` is nil, no conversion.
-		return nil
-	}
-	if pointer == nil {
-		return gerror.NewCode(gcode.CodeInvalidParameter, "object pointer cannot be nil")
-	}
-
-	if doStructsByDirectReflectSet(params, pointer) {
-		return nil
-	}
-
+func doStructs(
+	params interface{}, pointer interface{}, paramKeyToAttrMap map[string]string, priorityTag string,
+) (err error) {
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
@@ -57,35 +51,16 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			}
 		}
 	}()
-	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
-	switch r := params.(type) {
-	case []byte:
-		if json.Valid(r) {
-			if rv, ok := pointer.(reflect.Value); ok {
-				if rv.Kind() == reflect.Ptr {
-					return json.UnmarshalUseNumber(r, rv.Interface())
-				}
-			} else {
-				return json.UnmarshalUseNumber(r, pointer)
-			}
-		}
-	case string:
-		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
-			if rv, ok := pointer.(reflect.Value); ok {
-				if rv.Kind() == reflect.Ptr {
-					return json.UnmarshalUseNumber(paramsBytes, rv.Interface())
-				}
-			} else {
-				return json.UnmarshalUseNumber(paramsBytes, pointer)
-			}
-		}
-	}
+
 	// Pointer type check.
 	pointerRv, ok := pointer.(reflect.Value)
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
 		if kind := pointerRv.Kind(); kind != reflect.Ptr {
-			return gerror.NewCodef(gcode.CodeInvalidParameter, "pointer should be type of pointer, but got: %v", kind)
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"pointer should be type of pointer, but got: %v", kind,
+			)
 		}
 	}
 	// Converting `params` to map slice.
@@ -133,7 +108,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			if !tempReflectValue.IsValid() {
 				tempReflectValue = reflect.New(itemType.Elem()).Elem()
 			}
-			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
@@ -147,7 +122,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			} else {
 				tempReflectValue = reflect.New(itemType).Elem()
 			}
-			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, paramKeyToAttrMap, priorityTag); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue)
@@ -155,18 +130,4 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	}
 	pointerRv.Elem().Set(reflectElemArray)
 	return nil
-}
-
-// doStructsByDirectReflectSet do the converting directly using reflect Set.
-// It returns true if success, or else false.
-func doStructsByDirectReflectSet(params interface{}, pointer interface{}) (ok bool) {
-	v1 := reflect.ValueOf(pointer)
-	v2 := reflect.ValueOf(params)
-	if v1.Kind() == reflect.Ptr {
-		if elem := v1.Elem(); elem.IsValid() && elem.Type() == v2.Type() {
-			elem.Set(v2)
-			ok = true
-		}
-	}
-	return ok
 }

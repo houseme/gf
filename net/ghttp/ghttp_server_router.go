@@ -159,6 +159,8 @@ func (s *Server) doSetHandler(
 					switch item.Type {
 					case HandlerTypeHandler, HandlerTypeObject:
 						duplicatedHandler = items[i]
+					}
+					if duplicatedHandler != nil {
 						break
 					}
 				}
@@ -205,7 +207,8 @@ func (s *Server) doSetHandler(
 	//    and the leaf node also has "*list" item. If the node is not a fuzzy node either
 	//    a leaf, it neither has "*list" item.
 	// 2. The "*list" item is a list containing registered router items ordered by their
-	//    priorities from high to low.
+	//    priorities from high to low. If it's a fuzzy node, all the sub router items
+	//    from this fuzzy node will also be added to its "*list" item.
 	// 3. There may be repeated router items in the router lists. The lists' priorities
 	//    from root to leaf are from low to high.
 	var p = s.serveTree[domain]

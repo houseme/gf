@@ -9,11 +9,12 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/encoding/gbase64"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -213,15 +214,17 @@ func Test_Request_BasicAuth(t *testing.T) {
 }
 
 func Test_Request_SetCtx(t *testing.T) {
+	type ctxKey string
+	const testkey ctxKey = "test"
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
-			ctx := context.WithValue(r.Context(), "test", 1)
+			ctx := context.WithValue(r.Context(), testkey, 1)
 			r.SetCtx(ctx)
 			r.Middleware.Next()
 		})
 		group.ALL("/", func(r *ghttp.Request) {
-			r.Response.Write(r.Context().Value("test"))
+			r.Response.Write(r.Context().Value(testkey))
 		})
 	})
 	s.SetDumpRouterMap(false)
@@ -238,15 +241,17 @@ func Test_Request_SetCtx(t *testing.T) {
 }
 
 func Test_Request_GetCtx(t *testing.T) {
+	type ctxKey string
+	const testkey ctxKey = "test"
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
-			ctx := context.WithValue(r.GetCtx(), "test", 1)
+			ctx := context.WithValue(r.GetCtx(), testkey, 1)
 			r.SetCtx(ctx)
 			r.Middleware.Next()
 		})
 		group.ALL("/", func(r *ghttp.Request) {
-			r.Response.Write(r.Context().Value("test"))
+			r.Response.Write(r.Context().Value(testkey))
 		})
 	})
 	s.SetDumpRouterMap(false)
@@ -289,9 +294,6 @@ func Test_Request_Form(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
-	}
-	type Default struct {
-		D string
 	}
 	s := g.Server(guid.S())
 	s.Group("/", func(group *ghttp.RouterGroup) {
@@ -342,5 +344,94 @@ func Test_Request_Form(t *testing.T) {
 			"id":   1,
 			"name": "john",
 		}), "john")
+	})
+}
+
+func Test_Request_NeverDoneCtx_Done(t *testing.T) {
+	var array = garray.New(true)
+	s := g.Server(guid.S())
+	s.BindHandler("/done", func(r *ghttp.Request) {
+		var (
+			ctx    = r.Context()
+			ticker = time.NewTimer(time.Millisecond * 1500)
+		)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				array.Append(1)
+				return
+			case <-ticker.C:
+				array.Append(1)
+				return
+			}
+		}
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	c := g.Client()
+	c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+	gtest.C(t, func(t *gtest.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		go func() {
+			result := c.GetContent(ctx, "/done")
+			fmt.Println(result)
+		}()
+		time.Sleep(time.Millisecond * 100)
+
+		t.Assert(array.Len(), 0)
+		cancel()
+
+		time.Sleep(time.Millisecond * 500)
+		t.Assert(array.Len(), 1)
+	})
+}
+
+func Test_Request_NeverDoneCtx_NeverDone(t *testing.T) {
+	var array = garray.New(true)
+	s := g.Server(guid.S())
+	s.Use(ghttp.MiddlewareNeverDoneCtx)
+	s.BindHandler("/never-done", func(r *ghttp.Request) {
+		var (
+			ctx    = r.Context()
+			ticker = time.NewTimer(time.Millisecond * 1500)
+		)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				array.Append(1)
+				return
+			case <-ticker.C:
+				array.Append(1)
+				return
+			}
+		}
+	})
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	c := g.Client()
+	c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", s.GetListenedPort()))
+	gtest.C(t, func(t *gtest.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		go func() {
+			result := c.GetContent(ctx, "/never-done")
+			fmt.Println(result)
+		}()
+		time.Sleep(time.Millisecond * 100)
+
+		t.Assert(array.Len(), 0)
+		cancel()
+
+		time.Sleep(time.Millisecond * 1500)
+		t.Assert(array.Len(), 1)
 	})
 }

@@ -25,6 +25,8 @@ type Config struct {
 	Db              int           `json:"db"`              // Redis db.
 	User            string        `json:"user"`            // Username for AUTH.
 	Pass            string        `json:"pass"`            // Password for AUTH.
+	SentinelUser    string        `json:"sentinel_user"`   // Username for sentinel AUTH.
+	SentinelPass    string        `json:"sentinel_pass"`   // Password for sentinel AUTH.
 	MinIdle         int           `json:"minIdle"`         // Minimum number of connections allowed to be idle (default is 0)
 	MaxIdle         int           `json:"maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)
 	MaxActive       int           `json:"maxActive"`       // Maximum number of connections limit (default is 0 means no limit).
@@ -39,6 +41,8 @@ type Config struct {
 	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
 	TLSConfig       *tls.Config   `json:"-"`               // TLS Config to use. When set TLS will be negotiated.
 	SlaveOnly       bool          `json:"slaveOnly"`       // Route all commands to slave read-only nodes.
+	Cluster         bool          `json:"cluster"`         // Specifies whether cluster mode be used.
+	Protocol        int           `json:"protocol"`        // Specifies the RESP version (Protocol 2 or 3.)
 }
 
 const (
@@ -100,6 +104,9 @@ func ConfigFromMap(m map[string]interface{}) (config *Config, err error) {
 	}
 	if config.MaxConnLifetime < time.Second {
 		config.MaxConnLifetime = config.MaxConnLifetime * time.Second
+	}
+	if config.Protocol != 2 && config.Protocol != 3 {
+		config.Protocol = 3
 	}
 	return
 }

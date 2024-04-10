@@ -108,6 +108,7 @@ func (c *Client) SetBasicAuth(user, pass string) *Client {
 }
 
 // SetRetry sets retry count and interval.
+// TODO removed.
 func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	c.retryCount = retryCount
 	c.retryInterval = retryInterval
@@ -122,6 +123,12 @@ func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
 		}
 		return nil
 	}
+	return c
+}
+
+// SetNoUrlEncode sets the mark that do not encode the parameters before sending request.
+func (c *Client) SetNoUrlEncode(noUrlEncode bool) *Client {
+	c.noUrlEncode = noUrlEncode
 	return c
 }
 

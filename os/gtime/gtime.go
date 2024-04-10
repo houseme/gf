@@ -68,9 +68,9 @@ const (
 var (
 	// It's more high performance using regular expression
 	// than time.ParseInLocation to parse the datetime string.
-	timeRegex1, _ = regexp.Compile(timeRegexPattern1)
-	timeRegex2, _ = regexp.Compile(timeRegexPattern2)
-	timeRegex3, _ = regexp.Compile(timeRegexPattern3)
+	timeRegex1 = regexp.MustCompile(timeRegexPattern1)
+	timeRegex2 = regexp.MustCompile(timeRegexPattern2)
+	timeRegex3 = regexp.MustCompile(timeRegexPattern3)
 
 	// Month words to arabic numerals mapping.
 	monthMap = map[string]int{
@@ -363,19 +363,21 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
 // ParseTimeFromContent retrieves time information for content string, it then parses and returns it
 // as *Time object.
 // It returns the first time information if there are more than one time string in the content.
-// It only retrieves and parses the time information with given `format` if it's passed.
+// It only retrieves and parses the time information with given first matched `format` if it's passed.
 func ParseTimeFromContent(content string, format ...string) *Time {
 	var (
 		err   error
 		match []string
 	)
 	if len(format) > 0 {
-		match, err = gregex.MatchString(formatToRegexPattern(format[0]), content)
-		if err != nil {
-			intlog.Errorf(context.TODO(), `%+v`, err)
-		}
-		if len(match) > 0 {
-			return NewFromStrFormat(match[0], format[0])
+		for _, item := range format {
+			match, err = gregex.MatchString(formatToRegexPattern(item), content)
+			if err != nil {
+				intlog.Errorf(context.TODO(), `%+v`, err)
+			}
+			if len(match) > 0 {
+				return NewFromStrFormat(match[0], item)
+			}
 		}
 	} else {
 		if match = timeRegex1.FindStringSubmatch(content); len(match) >= 1 {

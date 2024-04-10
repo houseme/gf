@@ -8,6 +8,7 @@ package gtime
 
 import (
 	"bytes"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -66,6 +67,7 @@ var (
 )
 
 // Format formats and returns the formatted result with custom `format`.
+// Refer method Layout, if you want to follow stdlib layout.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""
@@ -266,7 +268,7 @@ func formatToStdLayout(format string) string {
 
 // formatToRegexPattern converts the custom format to its corresponding regular expression.
 func formatToRegexPattern(format string) string {
-	s := gregex.Quote(formatToStdLayout(format))
+	s := regexp.QuoteMeta(formatToStdLayout(format))
 	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
 	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
 	s, _ = gregex.ReplaceString(`\s+`, `\s+`, s)

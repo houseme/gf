@@ -144,7 +144,7 @@ func newCommandFromObjectMeta(object interface{}, name string) (command *Command
 	if err = gconv.Scan(metaData, &command); err != nil {
 		return
 	}
-	// Name filed is necessary.
+	// Name field is necessary.
 	if command.Name == "" {
 		if name == "" {
 			err = gerror.Newf(
@@ -251,6 +251,9 @@ func newCommandFromMethod(
 		return
 	}
 
+	// For input struct converting using priority tag.
+	var priorityTag = gstr.Join([]string{tagNameName, tagNameShort}, ",")
+
 	// =============================================================================================
 	// Create function that has value return.
 	// =============================================================================================
@@ -259,9 +262,16 @@ func newCommandFromMethod(
 		var (
 			data        = gconv.Map(parser.GetOptAll())
 			argIndex    = 0
-			arguments   = gconv.Strings(ctx.Value(CtxKeyArguments))
+			arguments   = parser.GetArgAll()
 			inputValues = []reflect.Value{reflect.ValueOf(ctx)}
 		)
+		if value := ctx.Value(CtxKeyArgumentsIndex); value != nil {
+			argIndex = value.(int)
+			// Use the left args to assign to input struct object.
+			if argIndex < len(arguments) {
+				arguments = arguments[argIndex:]
+			}
+		}
 		if data == nil {
 			data = map[string]interface{}{}
 		}
@@ -278,8 +288,11 @@ func newCommandFromMethod(
 				if arg.Orphan {
 					if orphanValue := parser.GetOpt(arg.Name); orphanValue != nil {
 						if orphanValue.String() == "" {
-							// Eg: gf -f
+							// Example: gf -f
 							data[arg.Name] = "true"
+							if arg.Short != "" {
+								data[arg.Short] = "true"
+							}
 						} else {
 							// Adapter with common user habits.
 							// Eg:
@@ -301,9 +314,9 @@ func newCommandFromMethod(
 				return fmt.Sprintf(`input command data map: %s`, gjson.MustEncode(data))
 			})
 			if inputObject.Kind() == reflect.Ptr {
-				err = gconv.Scan(data, inputObject.Interface())
+				err = gconv.StructTag(data, inputObject.Interface(), priorityTag)
 			} else {
-				err = gconv.Struct(data, inputObject.Addr().Interface())
+				err = gconv.StructTag(data, inputObject.Addr().Interface(), priorityTag)
 			}
 			intlog.PrintFunc(ctx, func() string {
 				return fmt.Sprintf(`input object assigned data: %s`, gjson.MustEncode(inputObject.Interface()))
@@ -408,6 +421,19 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 			foundValue interface{}
 		)
 		for _, field := range tagFields {
+			var (
+				nameValue  = field.Tag(tagNameName)
+				shortValue = field.Tag(tagNameShort)
+			)
+			// If it already has value, it then ignores the default value.
+			if value, ok := data[nameValue]; ok {
+				data[field.Name()] = value
+				continue
+			}
+			if value, ok := data[shortValue]; ok {
+				data[field.Name()] = value
+				continue
+			}
 			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
 			if foundKey == "" {
 				data[field.Name()] = field.TagValue

@@ -39,23 +39,20 @@ import _ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 ```
 import _ "github.com/gogf/gf/contrib/drivers/sqlite/v2"
 ```
-Note:
-- It does not support `Save` features.
 
 ## PostgreSQL
 ```
 import _ "github.com/gogf/gf/contrib/drivers/pgsql/v2"
 ```
 Note:
-- It does not support `Save/Replace` features.
-- It does not support `LastInsertId`.
+- It does not support `Replace` features.
 
 ## SQL Server
 ```
 import _ "github.com/gogf/gf/contrib/drivers/mssql/v2"
 ```
 Note:
-- It does not support `Save/Replace` features.
+- It does not support `Replace` features.
 - It does not support `LastInsertId`.
 - It supports server version >= `SQL Server2005`
 - It ONLY supports datetime2 and datetimeoffset types for auto handling created_at/updated_at/deleted_at columns, because datetime type does not support microseconds precision when column value is passed as string. 
@@ -65,7 +62,7 @@ Note:
 import _ "github.com/gogf/gf/contrib/drivers/oracle/v2"
 ```
 Note:
-- It does not support `Save/Replace` features.
+- It does not support `Replace` features.
 - It does not support `LastInsertId`.
 
 ## ClickHouse

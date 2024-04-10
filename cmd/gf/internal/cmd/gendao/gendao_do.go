@@ -9,6 +9,7 @@ package gendao
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -22,10 +23,8 @@ import (
 )
 
 func generateDo(ctx context.Context, in CGenDaoInternalInput) {
-	var dirPathDo = gfile.Join(in.Path, in.DoPath)
-	if in.Clear {
-		doClear(ctx, dirPathDo, false)
-	}
+	var dirPathDo = filepath.FromSlash(gfile.Join(in.Path, in.DoPath))
+	in.genItems.AppendDirPath(dirPathDo)
 	in.NoJsonTag = true
 	in.DescriptionTag = false
 	in.NoModelComment = false
@@ -65,6 +64,7 @@ func generateDo(ctx context.Context, in CGenDaoInternalInput) {
 			gstr.CaseCamel(newTableName),
 			structDefinition,
 		)
+		in.genItems.AppendGeneratedFilePath(doFilePath)
 		err = gfile.PutContents(doFilePath, strings.TrimSpace(modelContent))
 		if err != nil {
 			mlog.Fatalf(`writing content to "%s" failed: %v`, doFilePath, err)
