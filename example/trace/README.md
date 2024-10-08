@@ -1,21 +1,19 @@
-# OTLP Exporter For OpenTelemetry
+# OpenTelemetry Protocol (stable)
 
-## Usage
+Since v1.35, the Jaeger backend can receive trace data from the OpenTelemetry SDKs in their native OpenTelemetry Protocol (OTLP)  . It is no longer necessary to configure the OpenTelemetry SDKs with Jaeger exporters, nor deploy the OpenTelemetry Collector between the OpenTelemetry SDKs and the Jaeger backend.
 
-### OpenTelemetry Protocol (stable) [more](https://www.jaegertracing.io/docs/apis/#opentelemetry-protocol-stable)
+The OTLP data is accepted in these formats: (1) binary gRPC, (2) Protobuf over HTTP, (3) JSON over HTTP. For more details on the OTLP receiver see the official documentation  . Note that not all configuration options are supported in jaeger-collector (see --collector.otlp.* CLI Flags ), and only tracing data is accepted, since Jaeger does not store other telemetry types.
 
-Since v1.35, the Jaeger backend can receive trace data from the OpenTelemetry SDKs in their native [OpenTelemetry Protocol (OTLP)][otlp]. It is no longer necessary to configure the OpenTelemetry SDKs with Jaeger exporters, nor deploy the OpenTelemetry Collector between the OpenTelemetry SDKs and the Jaeger backend.
+|Port	|Protocol	|Endpoint	|Format|
+|---|---|---|---|
+|4317	|gRPC	|n/a	|Protobuf|
+|4318	|HTTP	|/v1/traces	|Protobuf or JSON|
 
-The OTLP data is accepted in these formats: (1) binary gRPC, (2) Protobuf over HTTP, (3) JSON over HTTP. For more details on the OTLP receiver see the [official documentation][otlp-rcvr]. Note that not all configuration options are supported in **jaeger-collector** (see `--collector.otlp.*` [CLI Flags](https://www.jaegertracing.io/docs/1.56/cli/#jaeger-collector)), and only tracing data is accepted, since Jaeger does not store other telemetry types.
-
-| Port  | Protocol | Endpoint     | Format
-| ----- | -------  | ------------ | ----
-| 4317  | gRPC     | n/a          | Protobuf
-| 4318  | HTTP     | `/v1/traces` | Protobuf or JSON
+Two ports, 4317 and 4318, have also been added to the export list, which are used by OTLP receivers to listen for gRPC and HTTP connections.
 
 [otlp-rcvr]: https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md
 [otlp]: https://github.com/open-telemetry/opentelemetry-proto/blob/main/docs/specification.md
-
+[download]:https://www.jaegertracing.io/download/
 
 # jaegertracing
 
@@ -25,13 +23,13 @@ Your applications must be instrumented before they can send tracing data to Jaeg
 
 Historically, the Jaeger project supported its own SDKs (aka tracers, client libraries) that implemented the OpenTracing API. As of 2022, the Jaeger SDKs are no longer supported, and all users are advised to migrate to OpenTelemetry.
 
-## All in One
 
-**all-in-one** is an executable designed for quick local testing. It includes the Jaeger UI, **jaeger-collector**, **jaeger-query**, and **jaeger-agent**, with an in memory storage component.
+## All in One
+all-in-one is an executable designed for quick local testing. It includes the Jaeger UI, jaeger-collector, jaeger-query, and jaeger-agent, with an in memory storage component.
 
 The simplest way to start the all-in-one is to use the pre-built image published to DockerHub (a single command line).
 
-```bash
+```shell
 docker run --rm --name jaeger \
   -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
   -p 6831:6831/udp \
@@ -47,7 +45,7 @@ docker run --rm --name jaeger \
   jaegertracing/all-in-one:1.56
 ```
 
-Or run the `jaeger-all-in-one(.exe)` executable from the [binary distribution archives](https://www.jaegertracing.io/download/):
+Or run the `jaeger-all-in-one(.exe)` executable from the [binary distribution archives][download]:
 
 ```bash
 jaeger-all-in-one --collector.zipkin.host-port=:9411
@@ -70,3 +68,22 @@ Port  | Protocol | Component | Function
 14250 | HTTP     | collector | accept `model.proto`
 9411  | HTTP     | collector | Zipkin compatible endpoint (optional)
 
+https://www.jaegertracing.io/docs/1.55/apis/#opentelemetry-protocol-stable
+
+Read more details:
+
+Introducing native support for OpenTelemetry in Jaeger
+
+https://medium.com/jaegertracing/introducing-native-support-for-opentelemetry-in-jaeger-eb661be8183c
+
+Better alignment with OpenTelemetry by focusing on OTLP
+
+https://medium.com/jaegertracing/better-alignment-with-opentelemetry-by-focusing-on-otlp-f3688939073f
+
+
+
+# Jaeger
+
+Open Source, End-to-End Distributed Tracing. Hosted by Cloud Native Computing Foundation.
+
+https://medium.com/jaegertracing

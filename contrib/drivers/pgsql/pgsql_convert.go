@@ -8,13 +8,37 @@ package pgsql
 
 import (
 	"context"
+	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
+
+// ConvertValueForField converts value to database acceptable value.
+func (d *Driver) ConvertValueForField(ctx context.Context, fieldType string, fieldValue interface{}) (interface{}, error) {
+	if g.IsNil(fieldValue) {
+		return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+	}
+
+	var fieldValueKind = reflect.TypeOf(fieldValue).Kind()
+
+	if fieldValueKind == reflect.Slice {
+		// For pgsql, json or jsonb require '[]'
+		if !gstr.Contains(fieldType, "json") {
+			fieldValue = gstr.ReplaceByMap(gconv.String(fieldValue),
+				map[string]string{
+					"[": "{",
+					"]": "}",
+				},
+			)
+		}
+	}
+	return d.Core.ConvertValueForField(ctx, fieldType, fieldValue)
+}
 
 // CheckLocalTypeForField checks and returns corresponding local golang type for given db type.
 func (d *Driver) CheckLocalTypeForField(ctx context.Context, fieldType string, fieldValue interface{}) (gdb.LocalType, error) {
